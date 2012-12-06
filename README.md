@@ -53,9 +53,16 @@ Installation instructions (short version)
 -----------------------------------------
 
 1. Install a single phototransistor (i used Osram SFH 300) to an IO pin
-   of the Arduino. Used pins defined in the arduino source code.
+   of the Arduino.  Used pins are defined in the arduino source code. 
+   Connect the short lead (collector) to the IO pin and the long lead
+   (emitter) to a ground pin of the Arduino.  When using multiple sensors,
+   tie all emitters to the same ground pin.
 2. Tape the phototransistor tightly in front of the red blinking led
-   of the electricity meter.
+   of the electricity meter.  It's a bit unsensitive, so make sure the led
+   and the phototransistor are aligned to point directly at each other.  If
+   the meter is in a well-luminated place instead of a dark closet like
+   mine, put black tape on the back of the transistor so that the light from
+   the outside does not interfere.
 3. Install the blinkcount Arduino code (found in the blinkcount
    subdirectory) on the Arduino.
 4. Observe accumulated counters printed on the USB serial port.
@@ -87,4 +94,18 @@ This takes port0's current value, and multiplies it by 3600.  If your power
 meter would only blink 500 times per kWh, you'd have to multiply it by 7200
 to display watts. The RRD files stored on disk will in any case store the
 blinks per second value for each interval.
+
+FAQ
+---
+
+** Is this legal? **
+
+Yes, we're not actually connecting any wires to the meter. There is only an
+optical coupling between the meter and the sensor - no electricity flowing
+between the meter and our stuff.
+
+** Is this safe? **
+
+Yes, see the previous question.  It's about as safe as taking photographs of
+the meter (which is, indeed, quite safe).
 
