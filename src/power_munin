@@ -1,0 +1,39 @@
+#!/bin/bash
+
+if [ "$1" == "config" ]; then
+cat << END
+graph_title Electric power consumption
+graph_category power
+graph_args --base 1000 -l 0
+graph_vlabel W
+port0.label Port 0
+port0.type DERIVE
+port0.cdef port0,3600,*
+port0.min 0
+port0.max 50000
+port1.label Port 1
+port1.type DERIVE
+port1.cdef port1,3600,*
+port1.min 0
+port1.max 50000
+port2.label Port 2
+port2.type DERIVE
+port2.cdef port2,3600,*
+port2.min 0
+port2.max 50000
+port3.label Port 3
+port3.type DERIVE
+port3.cdef port3,3600,*
+port3.min 0
+port3.max 50000
+port4.label Port 4
+port4.type DERIVE
+port4.cdef port4,3600,*
+port4.min 0
+port4.max 50000
+END
+exit 0
+fi
+
+cat /tmp/powermunin.state
+
