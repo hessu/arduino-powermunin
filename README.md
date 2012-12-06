@@ -109,3 +109,10 @@ between the meter and our stuff.
 Yes, see the previous question.  It's about as safe as taking photographs of
 the meter (which is, indeed, quite safe).
 
+**Privacy considerations?**
+
+Yes! Don't publish the measurements of your home meter on the Internet just
+like that - everyone can see when you're at home and when you're away. 
+Don't measure the power consumption of other people without their explicit
+consent.
+
