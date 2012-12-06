@@ -5,19 +5,22 @@ arduino-powermunin
 This is a very simple but working project to monitor the blinking led on
 common electricity meters (power meters) installed by utility companies.
 
+Minimum amount of components and code, but it works. Takes one evening to
+set up.
+
 Required hardware
 -----------------
 
-1. An Arduino (I used a Duemilanove, but Uno, or anything else goes)
+1. An Arduino (I used a Duemilanove, but Uno, or anything else goes).
 2. At least one phototransistor sensitive to visible light (many are only
    sensitive to infrared, and I don't know how much infrared a normal
    red LED produces). Osram SFH 300 seems to work fine. I used 5
    phototransistors since I'm monitoring 5 power meters!
 3. 2 wires to connect the phototransistor to the Arduino (I used 5-wire
    phone cable, 3-wire telephone cable would work too, or just about
-   anything else)
-4. Header pins to stick in the Arduino's header for soldering the wires
-5. USB cable to connect the Arduino to a computer
+   anything else).
+4. Header pins to stick in the Arduino's header for soldering the wires.
+5. USB cable to connect the Arduino to a computer.
 
 Theory of operation
 -------------------
@@ -31,10 +34,13 @@ When the red led of the power meter blinks, the phototransistor starts to
 conduct, short-circuiting the I/O pin to ground (through the pull-up
 resistor which kindly limits the current to some nice value which don't care
 much about).  The input pin's value is read by the arduino code, and it now
-shows a 0.
+shows a LOW value.  When the light goes out, the phototransistor stops
+conducting and the voltage on the I/O pin goes back up to 5V, and a
+digitalRead() in the arduino code reports HIGH again.
 
-The arduino code counts the amount of blinks, and prints the counts on the
-(USB) serial port every 5 seconds.
+The arduino code runs in a loop, reads I/O pin states, counts the amount of
+blinks (how many times has a pin gone from HIGH to LOW), and prints the
+counts on the (USB) serial port every 5 seconds.
 
 A daemon written in Perl (powermunind) reads the reports on the serial port,
 prints them to a state file on disk (or tmpfs to reduce disk I/O or flash
@@ -51,10 +57,11 @@ Installation instructions (short version)
 2. Tape the phototransistor tightly in front of the red blinking led
    of the electricity meter.
 3. Install the blinkcount Arduino code (found in the blinkcount
-   subdirectory) on the Arduino
-4. Observe accumulated counters printed on the USB serial port
+   subdirectory) on the Arduino.
+4. Observe accumulated counters printed on the USB serial port.
 5. Run src/powermunind which collects counter increments and dumps them
-   to a state file
+   to a state file. Put it in a startup script such as /etc/rc.local
+   so that it starts up after a reboot.
 6. Install src/power_munin munin plugin which gives out the state file
    to munin. Optionally, set some configuration within the script.
 
@@ -78,5 +85,6 @@ power_munin script's configuration section for each port:
 
 This takes port0's current value, and multiplies it by 3600.  If your power
 meter would only blink 500 times per kWh, you'd have to multiply it by 7200
-to display watts.
+to display watts. The RRD files stored on disk will in any case store the
+blinks per second value for each interval.
 
