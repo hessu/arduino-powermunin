@@ -60,23 +60,26 @@ wearout).
 A munin plugin written as a very simple shell script (power_munin) dumps the
 contents of that state file when run by the munin agent.
 
-Installation instructions (short version)
------------------------------------------
+Building and Installation instructions (short version)
+------------------------------------------------------
 
 1. Install a single phototransistor (i used Osram SFH 300) to an IO pin
    of the Arduino.  Used pins are defined in the arduino source code. 
    Connect the short lead (collector) to the IO pin and the long lead
    (emitter) to a ground pin of the Arduino.  When using multiple sensors,
    tie all emitters to the same ground pin.
-2. Tape the phototransistor tightly in front of the red blinking led
+2. Install the blinkcount Arduino code (found in the blinkcount
+   subdirectory) on the Arduino.
+3. Test the setup by pointing the phototransistor at a bright light source,
+   or bringing it very close to a burning led light.  Observe accumulated
+   counters printed on the USB serial port using the Arduino IDE's serial
+   monitor.
+4. Tape the phototransistor tightly in front of the red blinking led
    of the electricity meter.  It's a bit unsensitive, so make sure the led
    and the phototransistor are aligned to point directly at each other.  If
    the meter is in a well-luminated place instead of a dark closet like
    mine, put black tape on the back of the transistor so that the light from
    the outside does not interfere.
-3. Install the blinkcount Arduino code (found in the blinkcount
-   subdirectory) on the Arduino.
-4. Observe accumulated counters printed on the USB serial port.
 5. Run src/powermunind which collects counter increments and dumps them
    to a state file. Put it in a startup script such as /etc/rc.local
    so that it starts up after a reboot.
