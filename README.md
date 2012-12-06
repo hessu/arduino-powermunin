@@ -98,13 +98,13 @@ blinks per second value for each interval.
 FAQ
 ---
 
-** Is this legal? **
+**Is this legal?**
 
 Yes, we're not actually connecting any wires to the meter. There is only an
 optical coupling between the meter and the sensor - no electricity flowing
 between the meter and our stuff.
 
-** Is this safe? **
+**Is this safe?**
 
 Yes, see the previous question.  It's about as safe as taking photographs of
 the meter (which is, indeed, quite safe).
