@@ -1,4 +1,22 @@
 #!/bin/bash
+#
+# power_munin
+# (c) Heikki Hannikainen 2012
+#
+# Munin plugin for arduino-powermunin, for measuring power consumption
+# by counting led blinks of an energy meter
+#
+# License (same as Perl)
+# ----------------------
+#
+# This is free software; you can redistribute it and/or modify it under the
+# terms of either:
+#
+# a) the GNU General Public License as published by the Free Software
+# Foundation; either version 1, or (at your option) any later version, or
+#
+# b) the "Artistic License".
+#
 
 if [ "$1" == "config" ]; then
 cat << END
