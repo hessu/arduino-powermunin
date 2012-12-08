@@ -8,6 +8,8 @@ common electricity meters (power meters) installed by utility companies.
 Minimum amount of components and code, but it works. Takes one evening to
 set up.
 
+![Example munin graph](https://raw.github.com/hessu/arduino-powermunin/master/img/munin-power_a3-day.png)
+
 License (same as Perl)
 ----------------------
 
