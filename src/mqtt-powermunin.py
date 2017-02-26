@@ -31,11 +31,8 @@ MQTT_TOPIC = "raw/" + socket.getfqdn() + MQTT_SUBTOPIC
 SENDINTERVAL = config.getint("global", "sendinterval")
 DEVICESFILE = config.get("global", "devicesfile")
 
-# FIXME, have list of devices - ie
-# kitchenpi.vpn.glasgownet.com, 4304, /28.C8D40D040000/temperature
-# kitchenpi.vpn.glasgownet.com, 4304, /28.DDBF1D030000/temperature
-# kitchenpi.vpn.glasgownet.com, 4304, /28.3C4F1D030000/temperature
-# loftpi.vpn.glasgownet.com, 4304, /28.3C4F1D030000/temperature
+last_send = time.time()
+
 
 owserver = ""
 
@@ -59,6 +56,36 @@ else:
 logging.info("Starting " + APPNAME)
 logging.info("INFO MODE")
 logging.debug("DEBUG MODE")
+
+class SampleStore:
+    def __init__(self):
+        self.reset()
+    
+    def reset(self):
+        self.samples = 0
+        self.sum = 0.0
+        self.max = None
+        self.min = None
+    
+    def add(self, value):
+        self.samples += 1
+        self.sum += value
+        
+        if self.max == None or value > self.max:
+            self.max = value
+        
+        if self.min == None or value < self.min:
+            self.min = value
+    
+    def average(self):
+        if self.samples < 1:
+            return None
+            
+        return self.sum / self.samples
+        
+    def deviation(self):
+        return abs(self.max - self.min)
+
 
 # All the MQTT callbacks start here
 
@@ -222,8 +249,6 @@ def find_in_sublists(lst, value):
 
     raise ValueError("%s is not in lists" % value)
 
-AVERAGE_POWER_RANGE = 60.0 # seconds
-
 class DevicesList():
     """
     Read the list of devices, and expand to include publishing state and current value
@@ -232,13 +257,14 @@ class DevicesList():
     datafile = open(DEVICESFILE, "r")
     datareader = csv.reader(datafile)
     data = {}
-    samples = {}
+    store = {}
+
     for row in datareader:
         input = int(row[0])
         name = row[1]
         blinks_per_kwh = row[2]
         data[input] = (name, int(blinks_per_kwh))
-        samples[input] = []
+        store[input] = SampleStore()
         
     logging.info("read devices: %r" % data)
 
@@ -254,15 +280,26 @@ def process(buf):
         
         try:
             a = l.split(' ')
+            
+            if len(a) != 4:
+                logging.error("Wrong number of entries on line: %r", l)
+                return
+            
             input = int(a[0])
-            pulses = float(a[1])
-            last_pulse_interval = float(a[2])
+            pulses = int(a[1])
+            last_pulse_interval = int(a[2])
+            checksum = int(a[3])
         except ValueError, e:
             logging.error("Parsing exception: %r", e)
             logging.error("Problematic line: %r", l)
-            break
+            return
+        
+        if input ^ pulses ^ last_pulse_interval != checksum:
+            logging.error("Checksum mismatch: %r", l)
+            return
         
         c = DevicesList.data.get(input)
+        store = DevicesList.store.get(input)
         
         #print "data: %r" % DevicesList.data
         #print "input: %r: %r" % (input, c)
@@ -277,28 +314,24 @@ def process(buf):
         else:
             instant_power = 0
         
-        # maintain some history
-        h = DevicesList.samples[input]
+        if instant_power < 0 or instant_power > 25000:
+            logging.info("suspicious instant power, ignoring")
+            break
+        
+        store.add(instant_power)
+        
+        logging.info("input %d [%s]: %.0f pulses: %.1f Wh %.0f W (avg %.0f W)", input, name, pulses, watthours, instant_power, store.average())
+        
+        global last_send
+        
         now = time.time()
-        h.append((now, watthours))
-        # try to find a sample old enough
-        #print "history: %r" % h
-        avg_power = 0
-        for r in range(len(h)-2, -1, -1):
-            if h[r][0] < now - AVERAGE_POWER_RANGE:
-                elapsed = now - h[r][0]
-                used_in_range = watthours - h[r][1]
-                avg_power = used_in_range / elapsed * 3600.0
-                
-                DevicesList.samples[input] = h[r:]
-                break
-                
-        
-        logging.info("input %d [%s]: %.0f pulses: %.1f Wh %.0f W (avg %.0f W)", input, name, pulses, watthours, instant_power, avg_power)
-        
-        mqttc.publish(MQTT_TOPIC + name + "/watthours", watthours)
-        mqttc.publish(MQTT_TOPIC + name + "/watts", round(instant_power))
-        
+        if now - last_send >= SENDINTERVAL or now < last_send:
+            last_send = now
+            
+            mqttc.publish(MQTT_TOPIC + name + "/watthours", watthours)
+            mqttc.publish(MQTT_TOPIC + name + "/watts", round(store.average()))
+            
+            store.reset()
 
 def main_loop():
     """
@@ -306,7 +339,7 @@ def main_loop():
     """
     while True:
         try:
-            ser = serial.Serial('/dev/ttyUSB1', 38400, timeout=3)
+            ser = serial.Serial('/dev/ttyACM1', 115200, timeout=10)
         except serial.serialutil.SerialException, e:
             logging.error("Serial opening exception: %r", e)
             time.sleep(10)
